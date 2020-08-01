@@ -1,0 +1,45 @@
+package algorithm;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+
+public class BFS<T> extends Graph<T>{
+
+    public BFS() {}
+
+    private LinkedList<T> get_path(T curr, T start, T stop){
+
+        LinkedList<T> path = new LinkedList<>();
+        return path;
+    }
+
+    @Override
+    public LinkedList<T> find_path(T start, T stop) {
+        ArrayList<LinkedList<T>> queue = new ArrayList<>();
+        ArrayList<LinkedList<T>> visited = new ArrayList<>();
+        LinkedList<T> path = new LinkedList<>();
+
+        LinkedList<T> sec = new LinkedList<>();
+        sec.add(start);
+        sec.add(start);
+        visited.add(sec);
+        queue.addAll(graph.get(start));
+        while (!(queue.isEmpty())){
+            T neigh = queue.get(0).get(0);
+            queue.remove(0);
+            if (neigh == stop){
+            }
+            if (!visited.contains(neigh)){
+                for (LinkedList<T> neg: graph.get(neigh)){
+                    if(!visited.contains(neg.get(0)))
+                        queue.add(neg);
+                        LinkedList<T> thir = new LinkedList<>();
+                        thir.add(neg.get(0));
+                        thir.add(neigh);
+                        visited.add(thir);
+                }
+            }
+        }
+        return null;
+    }
+}
