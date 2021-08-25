@@ -1,0 +1,253 @@
+// ------------------------------------------------------------------------ Graph (abstract) ---------------------------------------------------------------------------------
+// remember about package
+
+import java.util.HashMap;
+import java.util.LinkedList;
+
+/*
+I made it abstract - here will be all general methods like adding edge, toString(), particular graph search algorithms will be
+implemented in other classes - there will be implemented find_way - here is abstracted, I made other classes because there are
+additional methods which will helpful. There is a problem: I tried to make Generics - algorithms work for Integers, but there is a problem
+with Strings -  '==' must be changed to .equals() - even if I've changed it there is still a problem - I think there must be
+a method which says if algorithm found solution - I've not implemented it yet cause I don't know what will be necessary (I think
+there will be our types)
+*/
+
+public abstract class Graph<T> {
+   protected HashMap<T,LinkedList<LinkedList<T>>> graph = new HashMap<>();
+
+    public Graph(){}
+
+    public void to_string(){
+        System.out.println(graph.toString());
+    }
+
+    // Below are 4 methods - two for directed/no directed edges, 2 for weighted/ no weighted - I used overloading cause in
+    // java has no default parameters.
+
+    public void add_edge(T v, T u, T w) { // weighted no directed edges
+        LinkedList values;
+        LinkedList wage;
+        if (!this.graph.containsKey(v)) { // v -> u
+            values = new LinkedList<LinkedList<T>>();
+            wage = new LinkedList<T>();
+            wage.add(u);
+            wage.add(w);
+            values.add(wage);
+            this.graph.put(v, values);
+        } else {
+            wage = new LinkedList<T>();
+            wage.add(u);
+            wage.add(w);
+            ((LinkedList)this.graph.get(v)).add(wage);
+        }
+
+        if (!this.graph.containsKey(u)) { // u -> v
+            values = new LinkedList<LinkedList<T>>();
+            wage = new LinkedList<T>();
+            wage.add(v);
+            wage.add(w);
+            values.add(wage);
+            this.graph.put(u, values);
+        } else {
+            wage = new LinkedList<T>();
+            wage.add(v);
+            wage.add(w);
+            ((LinkedList)this.graph.get(u)).add(wage);
+        }
+
+    }
+
+    public void add_directed_edge(T v, T u, T w) { // weighted directed edges
+        LinkedList values;
+        LinkedList wage;
+        if (!this.graph.containsKey(v)) { // v -> u
+            values = new LinkedList<LinkedList<T>>();
+            wage = new LinkedList<T>();
+            wage.add(u);
+            wage.add(w);
+            values.add(wage);
+            this.graph.put(v, values);
+        } else {
+            wage = new LinkedList<T>();
+            wage.add(u);
+            wage.add(w);
+            ((LinkedList) this.graph.get(v)).add(wage);
+        }
+    }
+
+    public void add_edge(T v, T u) { // no weighted no directed edges
+        LinkedList values;
+        LinkedList wage;
+        if (!this.graph.containsKey(v)) { // v -> u
+            values = new LinkedList<LinkedList<T>>();
+            wage = new LinkedList<T>();
+            wage.add(u);
+            values.add(wage);
+            this.graph.put(v, values);
+        } else {
+            wage = new LinkedList<T>();
+            wage.add(u);
+            ((LinkedList)this.graph.get(v)).add(wage);
+        }
+
+        if (!this.graph.containsKey(u)) { // v -> u
+            values = new LinkedList<LinkedList<T>>();
+            wage = new LinkedList<T>();
+            wage.add(v);
+            values.add(wage);
+            this.graph.put(u, values);
+        } else {
+            wage = new LinkedList<T>();
+            wage.add(v);
+            ((LinkedList)this.graph.get(u)).add(wage);
+        }
+
+    }
+
+    public void add_directed_edge(T v, T u){ // no weighted directed edges
+        LinkedList values;
+        if (!this.graph.containsKey(v)) { // u -> v
+            values = new LinkedList();
+            values.add(u);
+            this.graph.put(v, values);
+        } else {
+            ((LinkedList)this.graph.get(v)).add(u);
+        }
+    }
+
+
+    public abstract LinkedList<T> find_path(T var1, T var2);
+}
+
+// ------------------------------------------------------------------------ DFS ---------------------------------------------------------------------------------
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+
+import static java.util.Collections.reverse;
+
+// DFS = Deph-first search - I implemented it but I am not sure if it will be useful. 
+
+public class DFS<T> extends Graph<T> {
+
+    public DFS(){
+    }
+
+    private LinkedList<T> dfs(T start, T stop, HashMap<T, LinkedList<LinkedList<T>>> graph, ArrayList<T> visited){
+        LinkedList<T> thir = new LinkedList<>();
+        if (visited.contains(start))
+            return thir;
+        if (start == stop) {
+            thir.add(start);
+            return thir;
+        }
+        if (start == stop)
+            stop = start;
+        visited.add(start);
+        for (LinkedList<T> neig: graph.get(start)){
+            T neigh = neig.element();
+            LinkedList<T> sec = dfs(neigh,stop,graph,visited);
+            if (sec.size() != 0) {
+                sec.add(start);
+                return sec;
+            }
+        }
+        LinkedList<T> bck = new LinkedList<>();
+        return bck;
+    }
+
+    public LinkedList<T> find_path(T start, T stop){
+        ArrayList<T> visited = new ArrayList<>(); // more often algorithm will be check if element is in list than modify it
+        LinkedList rev = dfs(start,stop,graph,visited);
+        reverse(rev);
+        return rev;
+    }
+}
+
+
+// ------------------------------------------------------------------------ BFS ---------------------------------------------------------------------------------
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+
+import static java.util.Collections.reverse;
+
+/*
+It returns list - it must "back" to start, so algorithm must remember parent of node -
+that's why 'visited' is HashMap - it is quicker to get key O(1) than iterate over array of arrays (if there was just array
+it takes O(1) - but there is array of arrays - it must look into all arrays and it takes O(n)).
+*/
+
+public class BFS<T> extends Graph<T>{
+
+    public BFS() {}
+
+    // It takes node, his children and add array of (child, mather) to queue if there isn't the node (child) in visited.
+    private void append_to_queue(T mother, HashMap<T, T> visited, LinkedList<ArrayList<T>> queue){
+        for (LinkedList<T> neig: graph.get(mother)){
+            T neigh = neig.element();
+            ArrayList<T> one = new ArrayList<>();
+            one.add(neigh);
+            one.add(mother);
+            if (!visited.containsKey(neigh))
+                queue.add(one);
+        }
+    }
+
+    @Override
+    public LinkedList<T> find_path(T start, T stop) {
+        LinkedList<ArrayList<T>> queue = new LinkedList<>();
+        HashMap<T, T> visited = new HashMap<>();
+        LinkedList<T> path = new LinkedList<>();
+        if (start == stop) {
+            path.add(start);
+            return path;
+        }
+        append_to_queue(start,visited,queue);
+        visited.put(start,start);
+        while (!queue.isEmpty()){ //if there is no solution queue will be empty and algorithm ends.
+            T mother = queue.get(0).get(0); // mather is current node
+            if (mother == stop) {
+                visited.put(mother,queue.get(0).get(1)); //queue.get(0).get(1) is mother of node calls "mother"
+                path.add(mother);
+                T first = stop;
+                while (first != start){
+                    path.add(visited.get(mother));
+                    mother = visited.get(mother);
+                    first = mother;
+                }
+                reverse(path);
+                return path;
+            }
+            append_to_queue(mother,visited,queue);
+            if (!visited.containsKey(mother)){
+                visited.put(mother,queue.get(0).get(1));
+            }
+            queue.remove(0); // it removes current node from queue
+
+        }
+        return path;
+    }
+}
+
+// ------------------------------------------------------------------------ Main ---------------------------------------------------------------------------------
+
+public class Main {
+
+    public static void main(String[] args) {
+        DFS<Integer> test = new DFS<>();
+        test.add_edge(1,5);
+        test.add_edge(5,6);
+        test.add_edge(5,7);
+        test.add_edge(7,8);
+        test.add_edge(7,9);
+        test.add_edge(6,9);
+        test.add_edge(9,10);
+        test.to_string();
+        System.out.println(test.find_path(1,10));
+    }
+}
